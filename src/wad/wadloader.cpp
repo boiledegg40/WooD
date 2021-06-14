@@ -60,7 +60,7 @@ bool wadloader::open_wad()
     return true;
 }
 
-wadloader::read_directory()
+bool wadloader::read_directory()
 {
-    
+
 }
