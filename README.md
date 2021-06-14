@@ -10,6 +10,8 @@ WooD is intended to be a recreation of the Doom engine written in C++. This repo
 | freeglut3-dev   | OpenGL library |
 | build-essential | C/C++ compiler |
 
+You will also need any Doom IWAD (DOOM.wad, DOOM2. wad, etc)
+
 ### Building
 It is recommended to create a separate a folder for building. CMake is used to to generate the build files.
 
