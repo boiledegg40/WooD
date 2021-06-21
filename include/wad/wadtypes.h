@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-typedef header
+struct header
 {
     char idenfication[4];
     uint32_t numlumps;

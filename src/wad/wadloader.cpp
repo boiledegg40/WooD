@@ -1,5 +1,6 @@
 #include <iostream>
 #include "wad/wadloader.h"
+#include "wad/wadreader.h"
 
 wadloader::wadloader(std::string sWADFilePath) : m_WADData(NULL), m_sWADFilePath(sWADFilePath)
 {
@@ -20,7 +21,7 @@ bool wadloader::loadwad()
 
     if (!read_directory)
     {
-
+        return false;
     }
     return true;
 }
@@ -62,5 +63,13 @@ bool wadloader::open_wad()
 
 bool wadloader::read_directory()
 {
+    header header;
+    wadreader wadreader;
+    wadreader.read_header(m_WADData, 0, header);
 
+    std::cout << header.idenfication << std::endl;
+    std::cout << header.infotableofs << std::endl;
+    std::cout << header.numlumps << std::endl;
+    
+    return true;
 }
