@@ -10,7 +10,7 @@ struct header
 
 struct directory
 {
-    uint32_t lump_offset;
-    uint32_t lump_size;
-    char lump_name[9];
+    uint32_t filepos; // Offset to start of lump's data
+    uint32_t size; // Size of of lump in bytes
+    char name[9]; // ASCII string defining lump's name
 };
