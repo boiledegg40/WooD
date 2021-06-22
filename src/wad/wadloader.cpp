@@ -67,10 +67,23 @@ bool wadloader::read_directory()
     wadreader wadreader;
     wadreader.read_header(m_WADData, 0, header);
 
-    std::cout << header.identification << std::endl;
-    std::cout << header.infotableofs << std::endl;
-    std::cout << header.numlumps << std::endl;
+    std::cout << "WAD type: " << header.identification << std::endl;
+    std::cout << "Number of lumps: " << header.numlumps << std::endl;
+    std::cout << "Offset to the directory: " << header.infotableofs << std::endl;
     std::cout << std::endl;
+
+    directory directory;
+
+    for (unsigned int i = 0; i < header.numlumps; i++)
+    {
+        wadreader.read_directory(m_WADData, header.infotableofs + i * 16, directory);
+        m_directories.push_back(directory);
+
+        std::cout << "Lump offset: " << directory.filepos << std::endl;
+        std::cout << "Lump size: " << directory.size << std::endl;
+        std::cout << "Lump name: " << directory.name << std::endl;
+        
+    }
     
     return true;
 }
