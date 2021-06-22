@@ -3,7 +3,7 @@
 
 struct header
 {
-    char idenfication[4];
+    char identification[5];
     uint32_t numlumps;
     uint32_t infotableofs;
 };
