@@ -13,4 +13,4 @@ class wadreader
     protected:
         uint16_t read2bytes(const uint8_t *p_WADData, int offset);
         uint32_t read4bytes(const uint8_t *p_WADData, int offset);
-}
+};
