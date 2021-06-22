@@ -19,7 +19,7 @@ bool wadloader::loadwad()
         return false;
     }
 
-    if (!read_directory)
+    if (!read_directory())
     {
         return false;
     }
@@ -37,7 +37,7 @@ bool wadloader::open_wad()
     }
     
     m_WADFile.seekg(0, m_WADFile.end);
-    size_t = m_WADFile.tellg();
+    size_t length = m_WADFile.tellg();
 
     if (m_WADData)
     {
@@ -52,7 +52,7 @@ bool wadloader::open_wad()
         return false;
     }
 
-    m_WADFile.seekg(ifstream::beg);
+    m_WADFile.seekg(std::ifstream::beg);
     m_WADFile.read((char *)m_WADData, length);
 
     m_WADFile.close();
@@ -67,9 +67,10 @@ bool wadloader::read_directory()
     wadreader wadreader;
     wadreader.read_header(m_WADData, 0, header);
 
-    std::cout << header.idenfication << std::endl;
+    std::cout << header.identification << std::endl;
     std::cout << header.infotableofs << std::endl;
     std::cout << header.numlumps << std::endl;
+    std::cout << std::endl;
     
     return true;
 }
