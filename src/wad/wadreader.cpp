@@ -18,12 +18,10 @@ Then use the read4bytes function to get the numnber of lumps (4 bytes) and offse
 
 wadreader::wadreader()
 {
-
 }
 
 wadreader::~wadreader()
 {
-
 }
 
 uint32_t wadreader::read4bytes(const uint8_t *p_WADData, int offset)
@@ -35,10 +33,11 @@ uint32_t wadreader::read4bytes(const uint8_t *p_WADData, int offset)
 
 void wadreader::read_header(const uint8_t *p_WADData, int offset, header &header)
 {
-    for (i = 0; i < 4; i++)
-    {
-        header.identification[i] = p_WADData[offset + i];
-    }
+    // 0x00 - 0x03
+    header.identification[0] = p_WADData[offset];
+    header.identification[1] = p_WADData[offset + 1];
+    header.identification[2] = p_WADData[offset + 2];
+    header.identification[3] = p_WADData[offset + 3];
     header.identification[4] = '\0';
 
     // 0x04 - 0x07
