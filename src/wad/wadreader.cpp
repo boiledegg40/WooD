@@ -18,29 +18,29 @@ Then use the read4bytes function to get the numnber of lumps (4 bytes) and offse
 
 */
 
-wadreader::wadreader()
+Wadreader::Wadreader()
 {
 }
 
-wadreader::~wadreader()
+Wadreader::~Wadreader()
 {
 }
 
-uint32_t wadreader::read4bytes(const uint8_t *p_WADData, int offset)
+uint32_t Wadreader::read4bytes(const uint8_t *p_WADData, int offset)
 {
     uint32_t value;
     memcpy(&value, p_WADData + offset, sizeof(uint32_t));
     return value;
 }
 
-uint16_t wadreader::read2bytes(const uint8_t *p_WADData, int offset)
+uint16_t Wadreader::read2bytes(const uint8_t *p_WADData, int offset)
 {
     uint16_t value;
     memcpy(&value, p_WADData + offset, sizeof(uint16_t));
     return value;
 }
 
-void wadreader::read_header(const uint8_t *p_WADData, int offset, header &header)
+void Wadreader::read_header(const uint8_t *p_WADData, int offset, Header &header)
 {
     // 0x00 - 0x03
     header.identification[0] = p_WADData[offset];
@@ -56,7 +56,7 @@ void wadreader::read_header(const uint8_t *p_WADData, int offset, header &header
     header.infotableofs = read4bytes(p_WADData, offset + 8);
 }
 
-void wadreader::read_directory(const uint8_t *p_WADData, int offset, directory &directory)
+void Wadreader::read_directory(const uint8_t *p_WADData, int offset, Directory &directory)
 {
     // 0x00 - 0x03
     directory.filepos = read4bytes(p_WADData, offset);

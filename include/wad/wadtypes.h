@@ -1,14 +1,14 @@
 #pragma once
 #include <cstdint>
 
-struct header
+struct Header
 {
     char identification[5];
     uint32_t numlumps;
     uint32_t infotableofs;
 };
 
-struct directory
+struct Directory
 {
     uint32_t filepos; // Offset to start of lump's data
     uint32_t size; // Size of of lump in bytes
