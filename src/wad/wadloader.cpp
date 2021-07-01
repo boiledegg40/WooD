@@ -26,6 +26,13 @@ bool Wadloader::loadwad()
     return true;
 }
 
+/*
+For now, open_wad() loads the entire wad file to memory
+In the future, just read the header and directories to memory, 
+Then go back to load lumps as needed.
+Need to implement in the future
+*/
+
 bool Wadloader::open_wad()
 {
     std::cout << "Opening WAD file..." << std::endl;

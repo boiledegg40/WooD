@@ -18,6 +18,6 @@ class Wadloader
 
         std::string m_sWADFilePath; // Keep path of the file in memory
         std::ifstream m_WADFile; // Class to open the file
-        uint8_t *m_WADData; // Keep the file in memory
-        std::vector<Directory> m_directories;
+        uint8_t *m_WADData; // Keep the file in memory. 
+        std::vector<Directory> m_directories; // A vector to keep track of the directory entries
 };
