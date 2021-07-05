@@ -2,7 +2,7 @@
 #include "wad/wadloader.h"
 #include "wad/wadreader.h"
 
-Wadloader::Wadloader(std::string sWADFilePath) : m_WADData(NULL), m_sWADFilePath(sWADFilePath)
+Wadloader::Wadloader(std::string sWADFilePath) : m_WADData(nullptr), m_sWADFilePath(sWADFilePath)
 {
 
 }
@@ -49,11 +49,11 @@ bool Wadloader::open_wad()
     if (m_WADData)
     {
         delete[] m_WADData;
-        m_WADData = NULL;
+        m_WADData = nullptr;
     }
 
     m_WADData = new uint8_t[length];
-    if (m_WADData == NULL)
+    if (m_WADData == nullptr)
     {
         std::cout << "Error: failed to allocate memory for WAD file of size " << length << std::endl;
         return false;
