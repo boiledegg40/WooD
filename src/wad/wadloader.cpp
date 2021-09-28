@@ -72,7 +72,7 @@ bool Wadloader::read_directory()
 {
     Header header;
     Wadreader wadreader;
-    wadreader.read_header(m_WADData, 0, header);
+    wadreader.read_header(m_WADData, 0, header); // header is 12 bytes
 
     std::cout << "WAD type: " << header.identification << std::endl;
     std::cout << "Number of lumps: " << header.numlumps << std::endl;
