@@ -3,12 +3,12 @@
 
 /*
 Ok, so for now, we only need to have the read 4 bytes function.
-read4bytes - parameters: pointer the m_WADData, and offset from the beginning of m_WADData
+read4bytes - parameters: pointer the m_Header, and offset from the beginning of m_Header
 You create a 4 byte variable, ReadValue, and memcpy the stuff from the offset to ReadValue's address
 
 You don't need to do anything for the wadreader constructor and deconstructor.
 read_header():
-Only need address of m_WADData, and reference to the header object created.
+Only need address of m_Header, and reference to the header object created.
 Start by lookping through each element in the identification array
 given that the offset parameter is 0, you just add 1 to the offset each time
 identification[i] = p_WADData[offset + i] and so forth
