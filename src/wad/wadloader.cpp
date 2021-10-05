@@ -2,6 +2,8 @@
 #include "wad/wadloader.h"
 #include "wad/wadreader.h"
 
+#define HEADER_LENGTH 12
+
 Wadloader::Wadloader(std::string sWADFilePath) : m_sWADFilePath(sWADFilePath)
 {
 
@@ -43,7 +45,10 @@ Need to implement in the future
 bool Wadloader::read_header()
 {
     m_WADFile.seekg(std::ifstream::beg);
-    m_WADFile.read((char*)&header, sizeof(header));
+    m_WADFile.read((char*)&header.identification, 4);
+    m_WADFile.read((char*)&header.numlumps, 4);
+    m_WADFile.read((char*)&header.infotableofs, 4);
+
 
     std::cout << "WAD header loaded into memory." << std::endl;
     return true;

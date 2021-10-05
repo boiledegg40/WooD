@@ -10,7 +10,7 @@ class Wadloader
         Wadloader(std::string sWADFilePath); // Path of the file
         bool loadwad(); // Function used to load the WAD. Will call other functions
 
-        ~Wadloader(); // Deconstructor - Point m_Header to Null
+        ~Wadloader(); // Deconstructor - does nothing
 
     protected:
         bool read_header();

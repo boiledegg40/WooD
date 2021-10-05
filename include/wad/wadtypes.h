@@ -19,7 +19,7 @@ The rest of the variables are uint32_t's
 
 struct Header
 {
-    char identification[5];
+    char identification[4];
     uint32_t numlumps;
     uint32_t infotableofs;
 };
