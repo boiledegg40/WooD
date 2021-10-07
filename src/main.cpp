@@ -1,4 +1,4 @@
-#include "wad/wadloader.h"
+#include "wad/wad.h"
 
 int main(int argc, char** argv)
 {
