@@ -22,3 +22,5 @@ typedef struct memblock
 
 
 void Z_Malloc_init(int memory_size);
+
+void* Z_Malloc(int size);
