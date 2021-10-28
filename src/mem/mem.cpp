@@ -29,7 +29,6 @@ static void _check_valid(memblock_t* pointer)
 void z_free(void* block)
 {
     memblock_t* metadata = (memblock_t*)((char*)block - sizeof(memblock_t));
-    std::printf("ZONE_ID: %x\n", metadata->id);
     _check_valid(metadata);
     metadata->in_use = false;
     if (metadata->next->in_use == false)
@@ -56,7 +55,7 @@ void z_malloc_init(int memory_size)
     rover = buffer;
     std::printf("malloc_init(): %d megabytes of memory allocated\n", memory_size);
     std::printf("malloc_init(): base block address %p\n", (void*)(buffer));
-    std::printf("base block ZONE_ID: %x\n", buffer->id);
+    std::printf("malloc_init(): buffer size %d\n", buffer->size);
 }
 
 
@@ -65,6 +64,10 @@ void* z_malloc(int size, int tag)
     try
     {
         memblock_t* original_address = rover;
+        if (size > buffer->size)
+        {
+            throw std::bad_alloc();
+        }
         do
         {
             _check_valid(rover);
@@ -106,6 +109,5 @@ void* z_malloc(int size, int tag)
     rover->in_use = true;
     rover->id = ZONE_ID;
     rover->tag = tag;
-    std::printf("rover ZONE_ID: %x\n", rover->id);
     return (void*)((char*)rover + sizeof(memblock_t));
 }
