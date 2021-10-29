@@ -75,13 +75,17 @@ void* z_malloc(int size, int tag)
             {
                 break;
             }
-            else if (rover->tag >= PU_PURGELEVEL)
-            {
-                z_free((void*)(rover + sizeof(memblock_t)));
-                break;
-            }
             rover = rover->next;
         } while (!(rover == original_address));
+        do
+        {
+            if (rover->tag >= PU_PURGELEVEL)
+            {
+                z_free((void*)((char*)rover + sizeof(memblock_t)));
+                break;
+            }
+        } while (!(rover == original_address));
+        
         if (rover->in_use == true)
         {
             throw std::bad_alloc();
@@ -89,13 +93,13 @@ void* z_malloc(int size, int tag)
     }
     catch(const std::bad_alloc& e)
     {
-        std::cerr << "No free block found: " << e.what() << '\n';
+        std::cerr << e.what() << ": No free block found" << '\n';
         exit(EXIT_FAILURE);
     }
     
     if (rover->size > size) // If the free block size is greater than requ
     {
-        memblock_t* saved = rover + size + sizeof(memblock_t);
+        memblock_t* saved = (memblock_t*)(char*)rover + size + sizeof(memblock_t);
         saved->id = ZONE_ID;
         saved->in_use = false;
         saved->next = rover->next;
