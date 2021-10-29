@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 
-#define ZONE_ID 0x1d4a11
+#define ZONE_ID 0x1d4a11 // DOOM used this number as the ZONE_ID
 
 static memblock_t* buffer;
 static memblock_t* rover;
@@ -28,26 +28,35 @@ static void _check_valid(memblock_t* pointer)
 
 void z_free(void* block)
 {
-    memblock_t* metadata = (memblock_t*)((char*)block - sizeof(memblock_t));
-    _check_valid(metadata);
-    metadata->in_use = false;
-    if (metadata->next->in_use == false)
+    memblock_t* metadata = (memblock_t*)((char*)block - sizeof(memblock_t)); // Get the struct address from the memory address given. Cast to char is needed for pointer arithmetic
+    _check_valid(metadata); // Check to make sure the block's zone id is valid
+    metadata->user = NULL; // Set the user to null to indicate it's free
+    if (metadata->next->user == NULL) // If the next block is also free, then merge
     {
         metadata->size += (sizeof(memblock_t) + metadata->next->size);
         metadata->next = metadata->next->next;
     }
-    else if (metadata->previous->in_use == false)
+    else if (metadata->previous->user == NULL) // Merge if previous block is free
     {
         metadata->previous->size += (sizeof(memblock_t) + metadata->size);
         metadata->previous->next = metadata->next;
     }
 }
 
-void z_malloc_init(int memory_size)
+/*
+z_malloc_init():
+Initially allocate requested amount of memory using standard malloc
+Set all of the struct's members
+Set next and previous pointer to itself
+Size is size of allocated block - struct size
+Set rover to buffer
+*/
+
+void z_malloc_init(int memory_size) 
 {
     buffer = (memblock_t*)(malloc(memory_size * 1024 * 1024));
     buffer->size = (memory_size * 1024 * 1024) - sizeof(memblock_t);
-    buffer->in_use = false;
+    buffer->user = NULL;
     buffer->tag = PU_STATIC;
     buffer->id = ZONE_ID;
     buffer->next = buffer;
@@ -58,8 +67,20 @@ void z_malloc_init(int memory_size)
     std::printf("malloc_init(): buffer size %d\n", buffer->size);
 }
 
+/*
+z_malloc():
+z_malloc has 3 parameters: size, user, and tag
+size is requested amount of memory
+user is the pointer to the array (basically array of cached lumps) of void pointers (the memory block)
+tag is one of the tags listed in mem.h
+Finds a free block, or if no free block, tries to find a cache block and free it
+Otherwise, throw exception "No free block found"
+Once free block found, if block is bigger than size, split
+Set all of memblock_t's members
+Return void pointer to block
+*/
 
-void* z_malloc(int size, int tag)
+void* z_malloc(int size, void** user, int tag)
 {
     try
     {
@@ -71,7 +92,7 @@ void* z_malloc(int size, int tag)
         do
         {
             _check_valid(rover);
-            if (rover->in_use == false && rover->size >= size)
+            if (rover->user == NULL && rover->size >= size)
             {
                 break;
             }
@@ -86,7 +107,7 @@ void* z_malloc(int size, int tag)
             }
         } while (!(rover == original_address));
         
-        if (rover->in_use == true)
+        if (!(rover->user == NULL))
         {
             throw std::bad_alloc();
         }
@@ -101,16 +122,22 @@ void* z_malloc(int size, int tag)
     {
         memblock_t* saved = (memblock_t*)(char*)rover + size + sizeof(memblock_t);
         saved->id = ZONE_ID;
-        saved->in_use = false;
+        saved->user = NULL;
         saved->next = rover->next;
         saved->previous = rover;
-        saved->in_use = false;
         saved->tag = PU_STATIC;
         saved->size = saved->size - size;
         rover->next = saved;
         rover->size = size;
     }
-    rover->in_use = true;
+    if (tag >= PU_PURGELEVEL) // Shamelessly copy DOOM's source code
+    {
+        rover->user = (void**)2; // the 2 indicates that it is in use, but unowned
+    }
+    else
+    {
+        rover->user = user; // Otherwise, point to address of the index of the array to indicate which lump is in use
+    }
     rover->id = ZONE_ID;
     rover->tag = tag;
     return (void*)((char*)rover + sizeof(memblock_t));

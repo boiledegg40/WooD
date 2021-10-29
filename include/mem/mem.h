@@ -14,7 +14,7 @@
 typedef struct memblock
 {
     int size; // Size of block
-    bool in_use; // If the block is free or not
+    void** user; // If the block is free or not
     int tag; // Purgelevel, check Doom Black Book for info
     int id;
     struct memblock *next, *previous; // Like OG Doom, linked list with addresses to previous and next lbock
@@ -23,4 +23,4 @@ typedef struct memblock
 
 void z_malloc_init(int memory_size);
 void z_free(void* block);
-void* z_malloc(int size, int tag);
+void* z_malloc(int size, void** user, int tag);
