@@ -17,12 +17,12 @@ For the identification array, we give one more space for the null character ("\0
 The rest of the variables are uint32_t's
 */
 
-struct Header
+typedef struct wadinfo
 {
     char identification[5];
     uint32_t numlumps;
     uint32_t infotableofs;
-};
+} wadinfo_t;
 
 /*
 Directory struct:
@@ -39,9 +39,9 @@ The directory contains entries that help locate the lumps in the wad file. Each 
 
 */
 
-struct Directory
+typedef struct filelump_t
 {
     uint32_t filepos; // Offset to start of lump's data
     uint32_t size; // Size of of lump in bytes
-    char name[9]; // ASCII string defining lump's name
+    char name[8]; // ASCII string defining lump's name
 };

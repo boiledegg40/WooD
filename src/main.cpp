@@ -5,7 +5,7 @@
 int main(int argc, char** argv)
 {
     z_malloc_init(8);
-    loadwad(argv[1]); // Gives the object the path to the WAD specified in the command line argument
+    loadwad(argc, argv); // Gives the object the path to the WAD specified in the command line argument
     
     return 0;
 }
