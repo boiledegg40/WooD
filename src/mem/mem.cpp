@@ -9,6 +9,8 @@
 static memblock_t* buffer;
 static memblock_t* rover;
 
+// NOTE THAT THIS MEMORY ALLOCATOR IS DESIGNED FOR WAD LUMPS
+
 static void _check_valid(memblock_t* pointer)
 {
     try
