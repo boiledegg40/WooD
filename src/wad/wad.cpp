@@ -1,11 +1,11 @@
 #include <iostream>
 #include "wad/wad.h"
 
-static wadinfo_t wadinfo; // Keep the file in memory.
+static wadinfo_t header; // Keep the file in memory.
 
 
-static void read_wadinfo(std::ifstream& m_WADFile);
-static void read_filelump(std::ifstream& m_WADFile);
+static void read_header(std::ifstream& m_WADFile);
+static void read_directory(std::ifstream& m_WADFile);
 
 
 void loadwad(int argc, char** argv)
@@ -40,8 +40,8 @@ void loadwad(int argc, char** argv)
             std::printf("Error: failed to open IWAD file %s\n", PWAD_filepath);
             return;
         }
-        read_wadinfo(m_WADFile);
-        read_filelump(m_WADFile);
+        read_header(m_WADFile);
+        read_directory(m_WADFile);
 
         m_WADFile.close();
         m_WADFile.clear();
@@ -54,8 +54,8 @@ void loadwad(int argc, char** argv)
                 std::printf("Error: failed to open PWAD file %s\n", PWAD_filepath);
                 return;
             }
-            read_wadinfo(m_WADFile);
-            read_filelump(m_WADFile);
+            read_header(m_WADFile);
+            read_directory(m_WADFile);
 
             m_WADFile.close();
             m_WADFile.clear();
@@ -66,35 +66,35 @@ void loadwad(int argc, char** argv)
 
 /*
 For now, open_wad() loads the entire wad file to memory
-In the future, just read the wadinfo and directories to memory, 
+In the future, just read the header and directories to memory, 
 Then go back to load lumps as needed.
 Need to implement in the future
 */
 
-static void read_wadinfo(std::ifstream& m_WADFile)
+static void read_header(std::ifstream& m_WADFile)
 {
     m_WADFile.seekg(m_WADFile.beg);
-    m_WADFile.read((char*)&wadinfo.identification, 4);
-    wadinfo.identification[4] = '\0';
-    m_WADFile.read((char*)&wadinfo.numlumps, 4);
-    m_WADFile.read((char*)&wadinfo.infotableofs, 4);
+    m_WADFile.read((char*)&header.identification, 4);
+    header.identification[4] = '\0';
+    m_WADFile.read((char*)&header.numlumps, 4);
+    m_WADFile.read((char*)&header.infotableofs, 4);
 
     std::cout << "WAD info loaded into memory." << std::endl;
 
-    std::cout << "WAD type: " << wadinfo.identification << std::endl;
-    std::cout << "Number of lumps: " << wadinfo.numlumps << std::endl;
-    std::cout << "Offset to the directory: " << wadinfo.infotableofs << std::endl;
+    std::cout << "WAD type: " << header.identification << std::endl;
+    std::cout << "Number of lumps: " << header.numlumps << std::endl;
+    std::cout << "Offset to the directory: " << header.infotableofs << std::endl;
     std::cout << std::endl;
 }
 
-static void read_filelump(std::ifstream& m_WADFile)
+static void read_directory(std::ifstream& m_WADFile)
 {
     std::cout << "PLaceholder :)" << std::endl;
-    // filelump filelump;
+    // directory directory;
 
-    // for (unsigned int i = 0; i < wadinfo.numlumps; i++)
+    // for (unsigned int i = 0; i < header.numlumps; i++)
     // {
-    //     wadreader.read_filelump(m_wadinfo, wadinfo.infotableofs + i * 16, filelump);
-    //     m_directories.push_back(filelump);
+    //     wadreader.read_directory(m_header, header.infotableofs + i * 16, directory);
+    //     m_directories.push_back(directory);
     // }
 }
