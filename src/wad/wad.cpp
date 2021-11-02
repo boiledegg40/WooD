@@ -51,6 +51,7 @@ void loadwad(int argc, char** argv)
         read_header(i_WADFile, i_header);
         num_lumps += i_header.numlumps;
         lumpinfo = (lumpinfo_t*)(malloc(num_lumps * sizeof(lumpinfo_t)));
+        lumpcache = (void**)(malloc(num_lumps * sizeof(void*)));
         read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps);
         
         if (!(PWAD_filepath.empty())) // If PWAD is specified, then open and read
@@ -67,6 +68,7 @@ void loadwad(int argc, char** argv)
                 read_header(p_WADFile, p_header);
                 num_lumps += p_header.numlumps;
                 lumpinfo = (lumpinfo_t*)(realloc(lumpinfo, num_lumps * sizeof(lumpinfo_t)));
+                lumpcache = (void**)(realloc(lumpcache, num_lumps * sizeof(void*)));
                 read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps);
                 p_WADFile.close();
                 p_WADFile.clear();
@@ -102,6 +104,7 @@ static void read_header(std::ifstream& m_WADFile, wadinfo_t& header)
     std::cout << std::endl;
 }
 
+
 static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
 {
     static int lumpinfo_index = 0;
@@ -112,6 +115,7 @@ static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
         m_WADFile.read((char*)&lumpinfo[lumpinfo_index].size, 4);
         m_WADFile.read((char*)&lumpinfo[lumpinfo_index].name, 8);
         lumpinfo[lumpinfo_index].name[8] = '\0';
+        lumpcache[lumpinfo_index] = NULL;
         lumpinfo_index++;
     }
 
