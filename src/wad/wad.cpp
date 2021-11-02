@@ -1,9 +1,11 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 #include "wad/wad.h"
 
 static lumpinfo_t* lumpinfo;
+static void** lumpcache;
 
 static void read_header(std::ifstream& m_WADFile, wadinfo_t& header);
 static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps);
@@ -16,7 +18,7 @@ void loadwad(int argc, char** argv)
     int num_lumps = 0;
     std::string IWAD_filepath = "";
     // Can only support one PWAD for now
-    std::string PWAD_filepath = "";
+    std::vector<std::string> PWAD_filepath;
     if (argc <= 2) // If no valid flags, then give tip
     {
         std::printf("Usage is -i <IWAD file> -p <PWAD file (if applicable)>\n");
@@ -35,11 +37,11 @@ void loadwad(int argc, char** argv)
                 }
                 else if ((std::strcmp(argv[i], "-p")) == 0)
                 {
-                    PWAD_filepath = argv[i + 1];
+                    PWAD_filepath.push_back(argv[i + 1]);
                 }
             }
         }
-        std::printf("Opening IWAD file...\n"); // Load and read IWAD
+        std::printf("Opening IWAD file %s\n", IWAD_filepath.c_str()); // Load and read IWAD
         i_WADFile.open(IWAD_filepath, std::ifstream::binary);
         if (!i_WADFile.is_open())
         {
@@ -48,34 +50,39 @@ void loadwad(int argc, char** argv)
         }
         read_header(i_WADFile, i_header);
         num_lumps += i_header.numlumps;
-        
-        if (!(PWAD_filepath == "")) // If PWAD is specified, then open and read
-        {
-            std::printf("Opening PWAD file...\n");
-            p_WADFile.open(PWAD_filepath, std::ifstream::binary);
-            if (!p_WADFile.is_open())
-            {
-                std::printf("Error: failed to open PWAD file %s\n", PWAD_filepath.c_str());
-                return;
-            }
-            read_header(p_WADFile, p_header);
-            num_lumps += p_header.numlumps;
-        }
-        std::printf("Total num of lumps: %d\n", num_lumps);
         lumpinfo = (lumpinfo_t*)(malloc(num_lumps * sizeof(lumpinfo_t)));
         read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps);
-        read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps);
+        
+        if (!(PWAD_filepath.empty())) // If PWAD is specified, then open and read
+        {
+            for(std::string& pwadfile : PWAD_filepath)
+            {
+                std::printf("Opening PWAD file %s\n", pwadfile.c_str());
+                p_WADFile.open(pwadfile, std::ifstream::binary);
+                if (!p_WADFile.is_open())
+                {
+                    std::printf("Error: failed to open PWAD file %s\n", pwadfile.c_str());
+                    return;
+                }
+                read_header(p_WADFile, p_header);
+                num_lumps += p_header.numlumps;
+                lumpinfo = (lumpinfo_t*)(realloc(lumpinfo, num_lumps * sizeof(lumpinfo_t)));
+                read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps);
+                p_WADFile.close();
+                p_WADFile.clear();
+            }
+        }
+        std::printf("Total num of lumps: %d\n", num_lumps);
         i_WADFile.close();
-        p_WADFile.close();
     }
 
 }
 
 /*
-For now, open_wad() loads the entire wad file to memory
-In the future, just read the header and directories to memory, 
-Then go back to load lumps as needed.
-Need to implement in the future
+The wad reader used to load the entire wad into memory, which would not be very efficient
+Now, it only reads the header to get to the directory, and puts the directory into an array
+Doesn't load the lumps themselves
+After the custom malloc was implemented, we can now specific lumps as needed
 */
 
 static void read_header(std::ifstream& m_WADFile, wadinfo_t& header)
@@ -105,10 +112,6 @@ static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
         m_WADFile.read((char*)&lumpinfo[lumpinfo_index].size, 4);
         m_WADFile.read((char*)&lumpinfo[lumpinfo_index].name, 8);
         lumpinfo[lumpinfo_index].name[8] = '\0';
-        std::printf("Lump name: %s\n", lumpinfo[lumpinfo_index].name);
-        std::printf("Directory handle: %d\n", lumpinfo[lumpinfo_index].handle);
-        std::printf("Lump offset: %d\n", lumpinfo[lumpinfo_index].pos);
-        std::printf("Lump size: %d\n", lumpinfo[lumpinfo_index].size);
         lumpinfo_index++;
     }
 
