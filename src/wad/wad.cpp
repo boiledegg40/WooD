@@ -4,8 +4,8 @@
 #include <vector>
 #include "wad/wad.h"
 
-static lumpinfo_t* lumpinfo;
-static void** lumpcache;
+static lumpinfo_t* lumpinfo; // Holds directory entries so we could use this to access lumps in file and load to memory
+static void** lumpcache; // This array will hold pointers to memory blocks that will hold lumps. Mirrors the lumpinfo array
 
 static void read_header(std::ifstream& m_WADFile, wadinfo_t& header);
 static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps);
@@ -51,12 +51,12 @@ void loadwad(int argc, char** argv)
         read_header(i_WADFile, i_header);
         num_lumps += i_header.numlumps;
         lumpinfo = (lumpinfo_t*)(malloc(num_lumps * sizeof(lumpinfo_t)));
-        lumpcache = (void**)(malloc(num_lumps * sizeof(void*)));
+        lumpcache = (void**)(malloc(num_lumps * sizeof(void*))); // Allocate size for the lumpcache array
         read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps);
         
         if (!(PWAD_filepath.empty())) // If PWAD is specified, then open and read
         {
-            for(std::string& pwadfile : PWAD_filepath)
+            for(std::string& pwadfile : PWAD_filepath) // Loop through each pwad
             {
                 std::printf("Opening PWAD file %s\n", pwadfile.c_str());
                 p_WADFile.open(pwadfile, std::ifstream::binary);
@@ -104,6 +104,16 @@ static void read_header(std::ifstream& m_WADFile, wadinfo_t& header)
     std::cout << std::endl;
 }
 
+/*
+read_directory takes in 3 arguments: m_WADFile, which is a reference to the ifstream object, 
+ofs which is offset to directory, 
+numlumps, the number of lumps in the wad
+
+It creates an static int lumpinfo_index, which is meant to last so we can read from different files and add to array without doing some janky offset
+Loop through each directory entry, and add it to a struct (wadtypes.h) in lumpinfo array
+Set the mirrored array lumpcache to NULL 
+Increment lumpinfo_index
+*/
 
 static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
 {
