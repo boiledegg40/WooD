@@ -6,14 +6,16 @@
 static lumpinfo_t* lumpinfo;
 
 static void read_header(std::ifstream& m_WADFile, wadinfo_t& header);
-static void read_directory(std::ifstream& m_WADFile);
+static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps);
 
 
 void loadwad(int argc, char** argv)
 {
-    std::ifstream m_WADFile; // Class to open the file
+    std::ifstream i_WADFile; // Class to open the file
+    std::ifstream p_WADFile;
     int num_lumps = 0;
     std::string IWAD_filepath = "";
+    // Can only support one PWAD for now
     std::string PWAD_filepath = "";
     if (argc <= 2) // If no valid flags, then give tip
     {
@@ -21,7 +23,8 @@ void loadwad(int argc, char** argv)
     }
     else
     {
-        wadinfo_t header;
+        wadinfo_t i_header;
+        wadinfo_t p_header;
         for (int i = 1; i < argc; i++) // Check for and supplied arguments (The wad file)
         {
             if ((i + 1) != argc)
@@ -37,37 +40,33 @@ void loadwad(int argc, char** argv)
             }
         }
         std::printf("Opening IWAD file...\n"); // Load and read IWAD
-        m_WADFile.open(IWAD_filepath, std::ifstream::binary);
-        if (!m_WADFile.is_open())
+        i_WADFile.open(IWAD_filepath, std::ifstream::binary);
+        if (!i_WADFile.is_open())
         {
-            std::printf("Error: failed to open IWAD file %s\n", PWAD_filepath.c_str());
+            std::printf("Error: failed to open IWAD file %s\n", IWAD_filepath.c_str());
             return;
         }
-        read_header(m_WADFile, header);
-        num_lumps += header.numlumps;
-        read_directory(m_WADFile);
-
-        m_WADFile.close();
-        m_WADFile.clear();
+        read_header(i_WADFile, i_header);
+        num_lumps += i_header.numlumps;
+        
         if (!(PWAD_filepath == "")) // If PWAD is specified, then open and read
         {
             std::printf("Opening PWAD file...\n");
-            m_WADFile.open(PWAD_filepath, std::ifstream::binary);
-            if (!m_WADFile.is_open())
+            p_WADFile.open(PWAD_filepath, std::ifstream::binary);
+            if (!p_WADFile.is_open())
             {
                 std::printf("Error: failed to open PWAD file %s\n", PWAD_filepath.c_str());
                 return;
             }
-            read_header(m_WADFile, header);
-            num_lumps += header.numlumps;
-            read_directory(m_WADFile);
-
-            m_WADFile.close();
-            m_WADFile.clear();
+            read_header(p_WADFile, p_header);
+            num_lumps += p_header.numlumps;
         }
         std::printf("Total num of lumps: %d\n", num_lumps);
-//      lumpinfo = malloc(num_lumps * sizeof(lumpinfo_t));
-
+        lumpinfo = (lumpinfo_t*)(malloc(num_lumps * sizeof(lumpinfo_t)));
+        read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps);
+        read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps);
+        i_WADFile.close();
+        p_WADFile.close();
     }
 
 }
@@ -86,6 +85,7 @@ static void read_header(std::ifstream& m_WADFile, wadinfo_t& header)
     header.identification[4] = '\0';
     m_WADFile.read((char*)&header.numlumps, 4);
     m_WADFile.read((char*)&header.infotableofs, 4);
+    m_WADFile.seekg(header.infotableofs);
 
     std::cout << "WAD info loaded into memory." << std::endl;
 
@@ -95,7 +95,21 @@ static void read_header(std::ifstream& m_WADFile, wadinfo_t& header)
     std::cout << std::endl;
 }
 
-static void read_directory(std::ifstream& m_WADFile)
+static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
 {
-    std::printf("read_directory(): Placeholder\n");
+    static int lumpinfo_index = 0;
+    for (int i = 0; i < numlumps; i++)
+    {
+        lumpinfo[lumpinfo_index].handle = m_WADFile.tellg();
+        m_WADFile.read((char*)&lumpinfo[lumpinfo_index].pos, 4);
+        m_WADFile.read((char*)&lumpinfo[lumpinfo_index].size, 4);
+        m_WADFile.read((char*)&lumpinfo[lumpinfo_index].name, 8);
+        lumpinfo[lumpinfo_index].name[8] = '\0';
+        std::printf("Lump name: %s\n", lumpinfo[lumpinfo_index].name);
+        std::printf("Directory handle: %d\n", lumpinfo[lumpinfo_index].handle);
+        std::printf("Lump offset: %d\n", lumpinfo[lumpinfo_index].pos);
+        std::printf("Lump size: %d\n", lumpinfo[lumpinfo_index].size);
+        lumpinfo_index++;
+    }
+
 }

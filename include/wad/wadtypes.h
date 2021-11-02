@@ -39,15 +39,25 @@ The directory contains entries that help locate the lumps in the wad file. Each 
 
 */
 
-typedef struct filelump
-{
-    uint32_t filepos; // Offset to start of lump's data
-    uint32_t size; // Size of of lump in bytes
-    char name[8]; // ASCII string defining lump's name
-} filelump_t;
+// typedef struct filelump
+// {
+//     uint32_t filepos; // Offset to start of lump's data
+//     uint32_t size; // Size of of lump in bytes
+//     char name[8]; // ASCII string defining lump's name
+// } filelump_t;
+
+/*
+lumpinfo struct:
+Handle is the offset of this directory, so once we actually load in lumps, we know the location of directory
+name, is of course, the lump name
+pos is same as filepos (listed above): the offset to the actual lump
+size is the size of lump in bytes
+*/
 
 typedef struct lumpinfo
 {
-    char name[8];
-    int handle, pos, size;
+    char name[9];
+    uint32_t pos;
+    uint32_t size;
+    uint32_t handle;
 } lumpinfo_t;

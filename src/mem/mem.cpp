@@ -56,7 +56,7 @@ Set rover to buffer
 
 void z_malloc_init(int memory_size) 
 {
-    buffer = (memblock_t*)(malloc(memory_size * 1024 * 1024));
+    buffer = (memblock_t*)(std::malloc(memory_size * 1024 * 1024));
     buffer->size = (memory_size * 1024 * 1024) - sizeof(memblock_t);
     buffer->user = NULL;
     buffer->tag = PU_STATIC;
@@ -67,6 +67,12 @@ void z_malloc_init(int memory_size)
     std::printf("malloc_init(): %d megabytes of memory allocated\n", memory_size);
     std::printf("malloc_init(): base block address %p\n", (void*)(buffer));
     std::printf("malloc_init(): buffer size %d\n", buffer->size);
+}
+
+void z_malloc_cleanup()
+{
+    std::free(buffer);
+    std::printf("z_malloc_cleanup: Freed main memory block\n");
 }
 
 /*
