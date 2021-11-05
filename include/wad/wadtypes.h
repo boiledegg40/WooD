@@ -57,6 +57,7 @@ size is the size of lump in bytes
 typedef struct lumpinfo
 {
     char name[9];
+    char* filename; // Don't know size of filename
     uint32_t pos;
     uint32_t size;
     uint32_t handle;

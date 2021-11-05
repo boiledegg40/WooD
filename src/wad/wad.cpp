@@ -8,13 +8,14 @@ static lumpinfo_t* lumpinfo; // Holds directory entries so we could use this to 
 static void** lumpcache; // This array will hold pointers to memory blocks that will hold lumps. Mirrors the lumpinfo array
 
 static void read_header(std::ifstream& m_WADFile, wadinfo_t& header);
-static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps);
+static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps, const char* filename);
+
+static std::ifstream i_WADFile; // Class to open the file
+static std::ifstream p_WADFile;
 
 
 void loadwad(int argc, char** argv)
 {
-    std::ifstream i_WADFile; // Class to open the file
-    std::ifstream p_WADFile;
     int num_lumps = 0;
     std::string IWAD_filepath = "";
     // Can only support one PWAD for now
@@ -41,18 +42,23 @@ void loadwad(int argc, char** argv)
                 }
             }
         }
-        std::printf("Opening IWAD file %s\n", IWAD_filepath.c_str()); // Load and read IWAD
+        std::printf("loadwad(): Opening IWAD file %s\n", IWAD_filepath.c_str()); // Load and read IWAD
         i_WADFile.open(IWAD_filepath, std::ifstream::binary);
         if (!i_WADFile.is_open())
         {
-            std::printf("Error: failed to open IWAD file %s\n", IWAD_filepath.c_str());
+            std::printf("loadwad(): Error - failed to open IWAD file %s\n", IWAD_filepath.c_str());
             return;
         }
         read_header(i_WADFile, i_header);
+        if (strcmp(i_header.identification, "IWAD") != 0)
+        {
+            std::printf("loadwad(): %s is not a valid IWAD!\n", IWAD_filepath.c_str());
+            return;
+        }
         num_lumps += i_header.numlumps;
         lumpinfo = (lumpinfo_t*)(malloc(num_lumps * sizeof(lumpinfo_t)));
         lumpcache = (void**)(malloc(num_lumps * sizeof(void*))); // Allocate size for the lumpcache array
-        read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps);
+        read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps, IWAD_filepath.c_str());
         
         if (!(PWAD_filepath.empty())) // If PWAD is specified, then open and read
         {
@@ -66,10 +72,15 @@ void loadwad(int argc, char** argv)
                     return;
                 }
                 read_header(p_WADFile, p_header);
+                if (strcmp(p_header.identification, "PWAD") != 0)
+                {
+                    std::printf("loadwad(): %s is not a valid PWAD!\n", IWAD_filepath.c_str());
+                    return;
+                }
                 num_lumps += p_header.numlumps;
                 lumpinfo = (lumpinfo_t*)(realloc(lumpinfo, num_lumps * sizeof(lumpinfo_t)));
                 lumpcache = (void**)(realloc(lumpcache, num_lumps * sizeof(void*)));
-                read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps);
+                read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps, pwadfile.c_str());
                 p_WADFile.close();
                 p_WADFile.clear();
             }
@@ -115,7 +126,7 @@ Set the mirrored array lumpcache to NULL
 Increment lumpinfo_index
 */
 
-static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
+static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps, const char* filename)
 {
     static int lumpinfo_index = 0;
     for (int i = 0; i < numlumps; i++)
@@ -126,7 +137,11 @@ static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps)
         m_WADFile.read((char*)&lumpinfo[lumpinfo_index].name, 8);
         lumpinfo[lumpinfo_index].name[8] = '\0';
         lumpcache[lumpinfo_index] = NULL;
+        lumpinfo[lumpinfo_index].filename = strdup(filename);
         lumpinfo_index++;
     }
 
 }
+
+
+int findlump(const char* name)
