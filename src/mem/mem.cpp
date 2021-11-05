@@ -13,19 +13,29 @@ static memblock_t* rover;
 
 static void _check_valid(memblock_t* pointer)
 {
-    try
+    memblock_t* metadata = (memblock_t*)((char*)pointer - sizeof(memblock_t));
+    try // Check for heap corruption
     {
         if (pointer->id != ZONE_ID)
         {
-            throw std::bad_alloc();
+            throw "Invalid zone id in memory block!\n";
+        }
+        if (metadata->size == (((char*)metadata->next - (char*)pointer)))
+        {
+            throw "Block does not touch next block!\n";
+        }
+        if (metadata->next->previous != metadata)
+        {
+            throw "Next block doesn't have proper back link!\n";
         }
     }
-    catch(const std::bad_alloc& e)
+    catch(const char* msg)
     {
-        std::cerr << "Invalid zone id in memory block!\n";
+        std::cerr << "__check_valid: " << msg;
         exit(EXIT_FAILURE);
     }
     
+
 }
 
 void z_free(void* block)
@@ -75,6 +85,13 @@ void z_malloc_cleanup()
     std::printf("z_malloc_cleanup: Freed main memory block\n");
 }
 
+void z_changetag(void* ptr, int tag)
+{
+    memblock_t* mtd = (memblock_t*)((char*)ptr - sizeof(memblock_t));
+    _check_valid(mtd);
+    mtd->tag = tag;
+}
+
 /*
 z_malloc():
 z_malloc has 3 parameters: size, user, and tag
@@ -88,8 +105,13 @@ Set all of memblock_t's members
 Return void pointer to block
 */
 
-void* z_malloc(int size, void** user, int tag)
+void* z_malloc(int size, int tag, void** user = NULL)
 {
+    if ((user == NULL) && (tag < 100))
+    {
+        std::printf("z_malloc(): Error - must specify user\n");
+        exit(EXIT_FAILURE);
+    }
     try
     {
         memblock_t* original_address = rover;
@@ -99,7 +121,6 @@ void* z_malloc(int size, void** user, int tag)
         }
         do
         {
-            _check_valid(rover);
             if (rover->user == NULL && rover->size >= size)
             {
                 break;
@@ -148,5 +169,6 @@ void* z_malloc(int size, void** user, int tag)
     }
     rover->id = ZONE_ID;
     rover->tag = tag;
-    return (void*)((char*)rover + sizeof(memblock_t));
+    *user = (void*)((char*)rover + sizeof(memblock_t));
+    return *user;
 }

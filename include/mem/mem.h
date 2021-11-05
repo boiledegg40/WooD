@@ -23,5 +23,6 @@ typedef struct memblock
 
 void z_malloc_init(int memory_size);
 void z_free(void* block);
-void* z_malloc(int size, void** user, int tag);
+void* z_malloc(int size, int tag, void** user);
+void z_changetag(void* ptr, int tag);
 void z_malloc_cleanup();
