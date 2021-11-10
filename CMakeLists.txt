@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(WooD)
 
-add_subdirectory(src)
-
 target_include_directories(WooD PRIVATE include)
+
+add_subdirectory(src)
 
 

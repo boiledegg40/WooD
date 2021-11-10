@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <iostream>
 #include <stdlib.h>
+#include "e_exceptions.h"
 
 #define ZONE_ID 0x1d4a11 // DOOM used this number as the ZONE_ID
 
@@ -18,20 +19,20 @@ static void _check_valid(memblock_t* pointer)
     {
         if (pointer->id != ZONE_ID)
         {
-            throw "Invalid zone id in memory block!\n";
+            throw alloc_error("Invalid zone id in memory block!\n");
         }
         if (metadata->size == (((char*)metadata->next - (char*)pointer)))
         {
-            throw "Block does not touch next block!\n";
+            throw alloc_error("Block does not touch next block!\n");
         }
         if (metadata->next->previous != metadata)
         {
-            throw "Next block doesn't have proper back link!\n";
+            throw alloc_error("Next block doesn't have proper back link!\n");
         }
     }
-    catch(const char* msg)
+    catch(alloc_error &e)
     {
-        std::cerr << "__check_valid: " << msg;
+        std::cerr << "Heap error: " << e.what();
         exit(EXIT_FAILURE);
     }
     
@@ -117,7 +118,7 @@ void* z_malloc(int size, int tag, void** user = NULL)
         memblock_t* original_address = rover;
         if (size > buffer->size)
         {
-            throw std::bad_alloc();
+            throw alloc_error("No free block found");
         }
         do
         {
@@ -138,12 +139,12 @@ void* z_malloc(int size, int tag, void** user = NULL)
         
         if (!(rover->user == NULL))
         {
-            throw std::bad_alloc();
+            throw alloc_error("No free block found");
         }
     }
-    catch(const std::bad_alloc& e)
+    catch(alloc_error& e)
     {
-        std::cerr << e.what() << ": No free block found" << '\n';
+        std::cerr << "z_malloc(): " << e.what() << '\n';
         exit(EXIT_FAILURE);
     }
     

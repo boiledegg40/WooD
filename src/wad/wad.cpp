@@ -6,8 +6,9 @@
 
 static lumpinfo_t* lumpinfo; // Holds directory entries so we could use this to access lumps in file and load to memory
 static void** lumpcache; // This array will hold pointers to memory blocks that will hold lumps. Mirrors the lumpinfo array
+static int num_lumps = 0;
 
-static void read_header(std::ifstream& m_WADFile, wadinfo_t& header);
+static void read_header(std::ifstream& m_WADFile, wadinfo_t& header, const char* wadtype);
 static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps, const char* filename);
 
 static std::ifstream i_WADFile; // Class to open the file
@@ -16,7 +17,6 @@ static std::ifstream p_WADFile;
 
 void loadwad(int argc, char** argv)
 {
-    int num_lumps = 0;
     std::string IWAD_filepath = "";
     // Can only support one PWAD for now
     std::vector<std::string> PWAD_filepath;
@@ -49,7 +49,7 @@ void loadwad(int argc, char** argv)
             std::printf("loadwad(): Error - failed to open IWAD file %s\n", IWAD_filepath.c_str());
             return;
         }
-        read_header(i_WADFile, i_header);
+        read_header(i_WADFile, i_header, "IWAD");
         if (strcmp(i_header.identification, "IWAD") != 0)
         {
             std::printf("loadwad(): %s is not a valid IWAD!\n", IWAD_filepath.c_str());
@@ -71,7 +71,7 @@ void loadwad(int argc, char** argv)
                     std::printf("Error: failed to open PWAD file %s\n", pwadfile.c_str());
                     return;
                 }
-                read_header(p_WADFile, p_header);
+                read_header(p_WADFile, p_header, "PWAD");
                 if (strcmp(p_header.identification, "PWAD") != 0)
                 {
                     std::printf("loadwad(): %s is not a valid PWAD!\n", IWAD_filepath.c_str());
@@ -98,11 +98,26 @@ Doesn't load the lumps themselves
 After the custom malloc was implemented, we can now specific lumps as needed
 */
 
-static void read_header(std::ifstream& m_WADFile, wadinfo_t& header)
+static void read_header(std::ifstream& m_WADFile, wadinfo_t& header, const char* wadtype)
 {
     m_WADFile.seekg(m_WADFile.beg);
-    m_WADFile.read((char*)&header.identification, 4);
-    header.identification[4] = '\0';
+    try
+    {
+        m_WADFile.read((char*)&header.identification, 4);
+        header.identification[4] = '\0';
+        if (strcmp(wadtype, header.identification) != 0)
+        {
+        std::printf("loadwad(): Loaded wad is not valid %s", wadtype);
+        throw std::exception();
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        exit(EXIT_FAILURE);
+    }
+    
+    
     m_WADFile.read((char*)&header.numlumps, 4);
     m_WADFile.read((char*)&header.infotableofs, 4);
     m_WADFile.seekg(header.infotableofs);
@@ -145,3 +160,14 @@ static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps, cons
 
 
 int findlump(const char* name)
+{
+    for (int i = num_lumps - 1; i >= 0; i--)
+    {
+        if (strcmp(lumpinfo[i].name, name) == 0)
+        {
+            return i;
+        }
+    }
+    std::printf("findlump(): No lump with name %s found\n", name);
+    return -1;
+}
