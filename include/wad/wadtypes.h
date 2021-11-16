@@ -58,7 +58,7 @@ typedef struct lumpinfo
 {
     char name[9];
     char* filename; // Don't know size of filename
-    uint32_t pos;
-    uint32_t size;
-    uint32_t handle;
+    uint32_t pos; // Offset from directory to lump
+    uint32_t size; // Size of lump
+    uint32_t handle; // Directory pointer
 } lumpinfo_t;

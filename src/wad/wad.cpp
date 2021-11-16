@@ -3,6 +3,7 @@
 #include <cstring>
 #include <vector>
 #include "wad/wad.h"
+#include "mem/mem.h"
 
 static lumpinfo_t* lumpinfo; // Holds directory entries so we could use this to access lumps in file and load to memory
 static void** lumpcache; // This array will hold pointers to memory blocks that will hold lumps. Mirrors the lumpinfo array
@@ -11,8 +12,7 @@ static int num_lumps = 0;
 static void read_header(std::ifstream& m_WADFile, wadinfo_t& header, const char* wadtype);
 static void read_directory(std::ifstream& m_WADFile, int ofs, int numlumps, const char* filename);
 
-static std::ifstream i_WADFile; // Class to open the file
-static std::ifstream p_WADFile;
+static std::ifstream f_WADFile; // Class to open the file
 
 
 void loadwad(int argc, char** argv)
@@ -43,13 +43,13 @@ void loadwad(int argc, char** argv)
             }
         }
         std::printf("loadwad(): Opening IWAD file %s\n", IWAD_filepath.c_str()); // Load and read IWAD
-        i_WADFile.open(IWAD_filepath, std::ifstream::binary);
-        if (!i_WADFile.is_open())
+        f_WADFile.open(IWAD_filepath, std::ifstream::binary);
+        if (!f_WADFile.is_open())
         {
             std::printf("loadwad(): Error - failed to open IWAD file %s\n", IWAD_filepath.c_str());
             return;
         }
-        read_header(i_WADFile, i_header, "IWAD");
+        read_header(f_WADFile, i_header, "IWAD");
         if (strcmp(i_header.identification, "IWAD") != 0)
         {
             std::printf("loadwad(): %s is not a valid IWAD!\n", IWAD_filepath.c_str());
@@ -58,20 +58,22 @@ void loadwad(int argc, char** argv)
         num_lumps += i_header.numlumps;
         lumpinfo = (lumpinfo_t*)(malloc(num_lumps * sizeof(lumpinfo_t)));
         lumpcache = (void**)(malloc(num_lumps * sizeof(void*))); // Allocate size for the lumpcache array
-        read_directory(i_WADFile, i_header.infotableofs, i_header.numlumps, IWAD_filepath.c_str());
+        read_directory(f_WADFile, i_header.infotableofs, i_header.numlumps, IWAD_filepath.c_str());
+        f_WADFile.close();
+        f_WADFile.clear();
         
         if (!(PWAD_filepath.empty())) // If PWAD is specified, then open and read
         {
             for(std::string& pwadfile : PWAD_filepath) // Loop through each pwad
             {
                 std::printf("Opening PWAD file %s\n", pwadfile.c_str());
-                p_WADFile.open(pwadfile, std::ifstream::binary);
-                if (!p_WADFile.is_open())
+                f_WADFile.open(pwadfile, std::ifstream::binary);
+                if (!f_WADFile.is_open())
                 {
                     std::printf("Error: failed to open PWAD file %s\n", pwadfile.c_str());
                     return;
                 }
-                read_header(p_WADFile, p_header, "PWAD");
+                read_header(f_WADFile, p_header, "PWAD");
                 if (strcmp(p_header.identification, "PWAD") != 0)
                 {
                     std::printf("loadwad(): %s is not a valid PWAD!\n", IWAD_filepath.c_str());
@@ -80,13 +82,12 @@ void loadwad(int argc, char** argv)
                 num_lumps += p_header.numlumps;
                 lumpinfo = (lumpinfo_t*)(realloc(lumpinfo, num_lumps * sizeof(lumpinfo_t)));
                 lumpcache = (void**)(realloc(lumpcache, num_lumps * sizeof(void*)));
-                read_directory(p_WADFile, p_header.infotableofs, p_header.numlumps, pwadfile.c_str());
-                p_WADFile.close();
-                p_WADFile.clear();
+                read_directory(f_WADFile, p_header.infotableofs, p_header.numlumps, pwadfile.c_str());
+                f_WADFile.close();
+                f_WADFile.clear();
             }
         }
         std::printf("Total num of lumps: %d\n", num_lumps);
-        i_WADFile.close();
     }
 
 }
@@ -170,4 +171,21 @@ int findlump(const char* name)
     }
     std::printf("findlump(): No lump with name %s found\n", name);
     return -1;
+}
+
+void* loadlump(int index, int tag)
+{
+    void* ptr;
+    f_WADFile.open(lumpinfo[index].filename, std::ifstream::binary);
+    f_WADFile.seekg(lumpinfo[index].handle + lumpinfo[index].pos, f_WADFile.beg);
+    if (!lumpcache[index])
+    {
+        ptr = z_malloc(lumpinfo[index].size, tag, &lumpcache[index]);
+        f_WADFile.read((char*)ptr, lumpinfo[index].size);
+    }
+    else
+    {
+        z_changetag(lumpcache[index], tag);
+    }
+    return lumpcache[index];
 }

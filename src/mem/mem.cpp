@@ -15,25 +15,17 @@ static memblock_t* rover;
 static void _check_valid(memblock_t* pointer)
 {
     memblock_t* metadata = (memblock_t*)((char*)pointer - sizeof(memblock_t));
-    try // Check for heap corruption
+    if (pointer->id != ZONE_ID)
     {
-        if (pointer->id != ZONE_ID)
-        {
-            throw alloc_error("Invalid zone id in memory block!\n");
-        }
-        if (metadata->size == (((char*)metadata->next - (char*)pointer)))
-        {
-            throw alloc_error("Block does not touch next block!\n");
-        }
-        if (metadata->next->previous != metadata)
-        {
-            throw alloc_error("Next block doesn't have proper back link!\n");
-        }
+        throw alloc_error("Invalid zone id in memory block!\n");
     }
-    catch(alloc_error &e)
+    if (metadata->size == (((char*)metadata->next - (char*)pointer)))
     {
-        std::cerr << "Heap error: " << e.what();
-        exit(EXIT_FAILURE);
+        throw alloc_error("Block does not touch next block!\n");
+    }
+    if (metadata->next->previous != metadata)
+    {
+        throw alloc_error("Next block doesn't have proper back link!\n");
     }
     
 
@@ -42,7 +34,15 @@ static void _check_valid(memblock_t* pointer)
 void z_free(void* block)
 {
     memblock_t* metadata = (memblock_t*)((char*)block - sizeof(memblock_t)); // Get the struct address from the memory address given. Cast to char is needed for pointer arithmetic
-    _check_valid(metadata); // Check to make sure the block's zone id is valid
+    try
+    {
+        _check_valid(metadata); // Check to make sure the block's zone id is valid
+    }
+    catch(alloc_error &e)
+    {
+        std::cerr << "Heap error: " << e.what();
+        exit(EXIT_FAILURE);
+    }
     metadata->user = NULL; // Set the user to null to indicate it's free
     if (metadata->next->user == NULL) // If the next block is also free, then merge
     {
@@ -106,7 +106,7 @@ Set all of memblock_t's members
 Return void pointer to block
 */
 
-void* z_malloc(int size, int tag, void** user = NULL)
+void* z_malloc(int size, int tag, void** user)
 {
     if ((user == NULL) && (tag < 100))
     {
@@ -160,7 +160,7 @@ void* z_malloc(int size, int tag, void** user = NULL)
         rover->next = saved;
         rover->size = size;
     }
-    if (tag >= PU_PURGELEVEL) // Shamelessly copy DOOM's source code
+    if (tag >= PU_PURGELEVEL) // Cache block, so should be unowned
     {
         rover->user = (void**)2; // the 2 indicates that it is in use, but unowned
     }
