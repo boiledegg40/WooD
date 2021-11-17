@@ -12,4 +12,3 @@ class alloc_error : public std::exception
     private:
         std::string m;
 };
-

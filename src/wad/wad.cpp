@@ -4,6 +4,7 @@
 #include <vector>
 #include "wad/wad.h"
 #include "mem/mem.h"
+#include "e_exceptions.h"
 
 static lumpinfo_t* lumpinfo; // Holds directory entries so we could use this to access lumps in file and load to memory
 static void** lumpcache; // This array will hold pointers to memory blocks that will hold lumps. Mirrors the lumpinfo array
@@ -188,4 +189,17 @@ void* loadlump(int index, int tag)
         z_changetag(lumpcache[index], tag);
     }
     return lumpcache[index];
+}
+
+void* loadmap(const char* mapname, MapData lump_type)
+{
+    void* ptr;
+    int lump_index = findlump(mapname);
+    if (lump_index == -1)
+    {
+        return NULL;
+    }
+    lump_index += lump_type;
+    ptr = loadlump(lump_index, PU_LEVEL);
+    return ptr;
 }

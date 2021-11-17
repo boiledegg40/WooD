@@ -41,6 +41,7 @@ void z_free(void* block)
     catch(alloc_error &e)
     {
         std::cerr << "Heap error: " << e.what();
+        z_malloc_cleanup();
         exit(EXIT_FAILURE);
     }
     metadata->user = NULL; // Set the user to null to indicate it's free
@@ -90,6 +91,20 @@ void z_changetag(void* ptr, int tag)
 {
     memblock_t* mtd = (memblock_t*)((char*)ptr - sizeof(memblock_t));
     _check_valid(mtd);
+    try
+    {
+        if (mtd->tag >= PU_PURGELEVEL && mtd->user == NULL)
+        {
+            throw alloc_error("Error - Owner required for purgable blocks");
+        }
+    }
+    catch(alloc_error& e)
+    {
+        std::cerr << "z_changetag(): " << e.what() << '\n';
+        z_malloc_cleanup();
+        exit(EXIT_FAILURE);
+    }
+    
     mtd->tag = tag;
 }
 
@@ -145,6 +160,7 @@ void* z_malloc(int size, int tag, void** user)
     catch(alloc_error& e)
     {
         std::cerr << "z_malloc(): " << e.what() << '\n';
+        z_malloc_cleanup();
         exit(EXIT_FAILURE);
     }
     
