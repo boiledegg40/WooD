@@ -26,3 +26,4 @@ void z_free(void* block);
 void* z_malloc(int size, int tag, void** user);
 void z_changetag(void* ptr, int tag);
 void z_malloc_cleanup();
+int get_blocksize(void* ptr);

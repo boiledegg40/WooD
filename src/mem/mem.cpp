@@ -189,3 +189,9 @@ void* z_malloc(int size, int tag, void** user)
     *user = (void*)((char*)rover + sizeof(memblock_t));
     return *user;
 }
+
+int get_blocksize(void* ptr)
+{
+    memblock_t* metadata = (memblock_t*)((char*)ptr - sizeof(memblock_t));
+    return metadata->size;
+}

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <vector>
 #include "wadtypes.h"
-#include "map.h"
+#include "map/map.h"
 
 void loadwad(int argc, char** argv); // Function used to load the WAD. Will call other functions
 int findlump(const char* name);

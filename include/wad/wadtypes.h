@@ -39,12 +39,12 @@ The directory contains entries that help locate the lumps in the wad file. Each 
 
 */
 
-// typedef struct filelump
-// {
-//     uint32_t filepos; // Offset to start of lump's data
-//     uint32_t size; // Size of of lump in bytes
-//     char name[8]; // ASCII string defining lump's name
-// } filelump_t;
+typedef struct filelump
+{
+    uint32_t filepos; // Offset to start of lump's data
+    uint32_t size; // Size of of lump in bytes
+    char name[8]; // ASCII string defining lump's name
+} filelump_t;
 
 /*
 lumpinfo struct:
@@ -60,5 +60,4 @@ typedef struct lumpinfo
     char* filename; // Don't know size of filename
     uint32_t pos; // Offset from directory to lump
     uint32_t size; // Size of lump
-    uint32_t handle; // Directory pointer
 } lumpinfo_t;
