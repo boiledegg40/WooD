@@ -1,1 +1,0 @@
-target_sources(WooD PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/wad.cpp")

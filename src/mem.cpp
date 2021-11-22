@@ -1,9 +1,9 @@
-#include "mem/mem.h"
+#include "mem.h"
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
 #include <stdlib.h>
-#include "e_exceptions.h"
+#include "error.h"
 
 #define ZONE_ID 0x1d4a11 // DOOM used this number as the ZONE_ID
 
@@ -14,37 +14,36 @@ static memblock_t* rover;
 
 static void _check_valid(memblock_t* pointer)
 {
-    memblock_t* metadata = (memblock_t*)((char*)pointer - sizeof(memblock_t));
-    if (pointer->id != ZONE_ID)
+    for (memblock_t* block = rover; ;block = rover->next)
     {
-        throw alloc_error("Invalid zone id in memory block!\n");
-    }
-    if (metadata->size == (((char*)metadata->next - (char*)pointer)))
-    {
-        throw alloc_error("Block does not touch next block!\n");
-    }
-    if (metadata->next->previous != metadata)
-    {
-        throw alloc_error("Next block doesn't have proper back link!\n");
-    }
+        if (block->next == rover)
+        {
+            break;
+        }
+        if ((char*)block + sizeof(memblock_t) + block->size != (char*)block->next)
+        {
+            e_error("Block does not touch next block!\n");
+        }
+        if (block->id != ZONE_ID)
+        {
+            e_error("Invalid zone id in memory block!\n");
+        }
+        if (block->next->previous != block)
+        {
+            
+            e_error("Next block doesn't have proper back link!\n");
+        }
     
+    }
 
 }
 
 void z_free(void* block)
 {
     memblock_t* metadata = (memblock_t*)((char*)block - sizeof(memblock_t)); // Get the struct address from the memory address given. Cast to char is needed for pointer arithmetic
-    try
-    {
-        _check_valid(metadata); // Check to make sure the block's zone id is valid
-    }
-    catch(alloc_error &e)
-    {
-        std::cerr << "Heap error: " << e.what();
-        z_malloc_cleanup();
-        exit(EXIT_FAILURE);
-    }
+    _check_valid(metadata); // Check to make sure the block's zone id is valid
     metadata->user = NULL; // Set the user to null to indicate it's free
+    metadata->tag = PU_STATIC;
     if (metadata->next->user == NULL) // If the next block is also free, then merge
     {
         metadata->size += (sizeof(memblock_t) + metadata->next->size);
@@ -91,20 +90,10 @@ void z_changetag(void* ptr, int tag)
 {
     memblock_t* mtd = (memblock_t*)((char*)ptr - sizeof(memblock_t));
     _check_valid(mtd);
-    try
+    if (mtd->tag >= PU_PURGELEVEL && mtd->user == NULL)
     {
-        if (mtd->tag >= PU_PURGELEVEL && mtd->user == NULL)
-        {
-            throw alloc_error("Error - Owner required for purgable blocks");
-        }
+        e_error("Owner required for purgable blocks");
     }
-    catch(alloc_error& e)
-    {
-        std::cerr << "z_changetag(): " << e.what() << '\n';
-        z_malloc_cleanup();
-        exit(EXIT_FAILURE);
-    }
-    
     mtd->tag = tag;
 }
 
@@ -128,54 +117,46 @@ void* z_malloc(int size, int tag, void** user)
         std::printf("z_malloc(): Error - must specify user\n");
         exit(EXIT_FAILURE);
     }
-    try
+    memblock_t* original_address = rover;
+    if (size > buffer->size)
     {
-        memblock_t* original_address = rover;
-        if (size > buffer->size)
-        {
-            throw alloc_error("No free block found");
-        }
-        do
-        {
-            if (rover->user == NULL && rover->size >= size)
-            {
-                break;
-            }
-            rover = rover->next;
-        } while (!(rover == original_address));
-        do
-        {
-            if (rover->tag >= PU_PURGELEVEL)
-            {
-                z_free((void*)((char*)rover + sizeof(memblock_t)));
-                break;
-            }
-        } while (!(rover == original_address));
-        
-        if (!(rover->user == NULL))
-        {
-            throw alloc_error("No free block found");
-        }
+         e_error("No free block found");
     }
-    catch(alloc_error& e)
+    do
     {
-        std::cerr << "z_malloc(): " << e.what() << '\n';
-        z_malloc_cleanup();
-        exit(EXIT_FAILURE);
-    }
+        if (rover->user == NULL && rover->size >= size)
+        {
+            break;
+        }
+        rover = rover->next;
+    } while (!(rover == original_address));
+    do
+    {
+        if (rover->tag >= PU_PURGELEVEL)
+        {
+            z_free((void*)((char*)rover + sizeof(memblock_t)));
+            break;
+        }
+    } while (!(rover == original_address));
     
+    if (!(rover->user == NULL))
+    {
+        e_error("No free block found");
+    }
+    _check_valid(rover);
     if (rover->size > size) // If the free block size is greater than requ
     {
-        memblock_t* saved = (memblock_t*)(char*)rover + size + sizeof(memblock_t);
+        memblock_t* saved = (memblock_t*)((char*)rover + sizeof(memblock_t) + size);
         saved->id = ZONE_ID;
         saved->user = NULL;
         saved->next = rover->next;
         saved->previous = rover;
         saved->tag = PU_STATIC;
-        saved->size = saved->size - size;
+        saved->size = rover->size - size;
         rover->next = saved;
         rover->size = size;
     }
+    _check_valid(rover);
     if (tag >= PU_PURGELEVEL) // Cache block, so should be unowned
     {
         rover->user = (void**)2; // the 2 indicates that it is in use, but unowned

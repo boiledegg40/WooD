@@ -1,6 +1,6 @@
 #include <cstdio>
-#include "map/map.h"
-#include "mem/mem.h"
+#include "map.h"
+#include "mem.h"
 
 Vertex* read_vertex(void* data)
 {

@@ -2,9 +2,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-#include "wad/wad.h"
-#include "mem/mem.h"
-#include "e_exceptions.h"
+#include "wad.h"
+#include "mem.h"
 
 static lumpinfo_t* lumpinfo; // Holds directory entries so we could use this to access lumps in file and load to memory
 static void** lumpcache; // This array will hold pointers to memory blocks that will hold lumps. Mirrors the lumpinfo array
