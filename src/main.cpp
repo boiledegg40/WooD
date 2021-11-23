@@ -1,7 +1,9 @@
+#include <glad/glad.h>
 #include "wad.h"
 #include "mem.h"
 #include "map.h"
 #include <cstdio>
+#include <GLFW/glfw3.h>
 
 int main(int argc, char** argv)
 {
