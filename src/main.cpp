@@ -1,9 +1,10 @@
-#include <glad/glad.h>
 #include "wad.h"
 #include "mem.h"
 #include "map.h"
+#include "graphics.h"
+#include "game.h"
+#include "error.h"
 #include <cstdio>
-#include <GLFW/glfw3.h>
 
 int main(int argc, char** argv)
 {
@@ -12,6 +13,12 @@ int main(int argc, char** argv)
     void* vertex = loadmap("MAP01", VERTEXES);
     read_vertex(vertex);
     z_free(vertex);
+    bool error = init_window();
+    if (error)
+    {
+        gameloop();
+    }
+    glfwTerminate();
     z_malloc_cleanup();
     return 0;
 }
