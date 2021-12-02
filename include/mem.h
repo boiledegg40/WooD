@@ -11,17 +11,17 @@
 #define PU_PURGELEVEL 100
 #define PU_CACHE 101
 
-typedef struct memblock
+struct Memblock
 {
     int size; // Size of block
     void** user; // If the block is free or not
     int tag; // Purgelevel, check Doom Black Book for info
     int id;
-    struct memblock *next, *previous; // Like OG Doom, linked list with addresses to previous and next lbock
-} memblock_t;
+    Memblock *next, *previous; // Like OG Doom, linked list with addresses to previous and next lbock
+};
 
 
-void z_malloc_init(int memory_size);
+void z_malloc_init(int memorySize);
 void z_free(void* block);
 void* z_malloc(int size, int tag, void** user);
 void z_changetag(void* ptr, int tag);

@@ -1,13 +1,13 @@
 #include "game.h"
+#include "graphics.h"
+#include "wad.h"
 #include <cstdio>
 
 void gameloop()
 {
-    while(true)
+    while(!(glfwWindowShouldClose(window))) // Game loop
     {
-        if (!display())
-        {
-            break;
-        }
+        process_input();
+        display();
     }
 }

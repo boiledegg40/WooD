@@ -120,7 +120,7 @@ static void read_header(std::ifstream& m_WADFile, wadinfo_t& header, const char*
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::fprintf(stderr, "Error: %s\n", e.what());
         exit(EXIT_FAILURE);
     }
     
@@ -129,12 +129,11 @@ static void read_header(std::ifstream& m_WADFile, wadinfo_t& header, const char*
     m_WADFile.read((char*)&header.infotableofs, 4);
     m_WADFile.seekg(header.infotableofs);
 
-    std::cout << "WAD info loaded into memory." << std::endl;
+    std::printf("WAD info loaded into memory\n");
 
-    std::cout << "WAD type: " << header.identification << std::endl;
-    std::cout << "Number of lumps: " << header.numlumps << std::endl;
-    std::cout << "Offset to the directory: " << header.infotableofs << std::endl;
-    std::cout << std::endl;
+    std::printf("WAD type: %s\n", header.identification);
+    std::printf("Number of lumps: %d\n", header.numlumps);
+    std::printf("Offset to the directory: %d\n", header.infotableofs);
 }
 
 /*

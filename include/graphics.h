@@ -3,8 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-bool init_window();
+extern GLFWwindow* window;
+
+void init_window();
 
 void process_input();
 
-bool display();
+void display();
